@@ -1,0 +1,16 @@
+# Ignore environment & sensitive config
+
+.env
+
+# Ignore dependencies
+
+/vendor/
+
+# Ignore logs & temp files
+
+*.log
+/tmp/
+
+# Ignore uploads
+
+/uploads/
