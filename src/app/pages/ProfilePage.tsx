@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   User,
   MapPin,
@@ -17,14 +17,21 @@ import { SettingsTab } from "../components/profile/SettingsTab";
 import { FavoritesTab } from "../components/profile/FavoritesTab";
 
 export function ProfilePage() {
-  const { user, logout } = useUser();
+  const { user, logout, isLoading } = useUser();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<
     "orders" | "addresses" | "favorites" | "settings"
   >("orders");
 
-  const handleLogout = () => {
-    logout();
+  // Redirect to login if not authenticated (after loading finishes)
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate("/login");
+    }
+  }, [isLoading, user, navigate]);
+
+  const handleLogout = async () => {
+    await logout();
     navigate("/login");
   };
 
@@ -34,6 +41,18 @@ export function ProfilePage() {
     { id: "favorites" as const, label: "Favorites", icon: Heart },
     { id: "settings" as const, label: "Settings", icon: Settings },
   ];
+
+  // Show loading spinner while session is being verified
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[#aa5289] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Fallback avatar: use UI Avatars service (no profileImage field in AuthUser)
+  const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=aa5289&color=fff&size=128`;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -60,7 +79,7 @@ export function ProfilePage() {
             <div className="text-center mb-6">
               <div className="relative inline-block mb-4">
                 <img
-                  src={user.profileImage}
+                  src={avatarUrl}
                   alt={user.name}
                   className="w-24 h-24 rounded-full object-cover"
                 />
@@ -73,7 +92,6 @@ export function ProfilePage() {
               </div>
               <h2 className="text-xl mb-1">{user.name}</h2>
               <p className="text-gray-600 text-sm">{user.email}</p>
-              <p className="text-gray-600 text-sm">{user.phone}</p>
             </div>
 
             {/* Navigation Tabs */}
